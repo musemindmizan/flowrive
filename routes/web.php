@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommentReactionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\NotificationController;
@@ -9,6 +11,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskMoveController;
+use App\Http\Controllers\TaskWatcherController;
 use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +40,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('tasks/{task}/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::post('comments/{comment}/reaction', CommentReactionController::class)->name('comments.react');
+
+    Route::post('tasks/{task}/watch', [TaskWatcherController::class, 'store'])->name('tasks.watch');
+    Route::delete('tasks/{task}/watch', [TaskWatcherController::class, 'destroy'])->name('tasks.unwatch');
+
+    Route::post('tasks/{task}/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
+    Route::get('attachments/{attachment}', [AttachmentController::class, 'download'])->name('attachments.download');
+    Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 
     Route::post('tasks/{task}/subtasks', [SubtaskController::class, 'store'])->name('subtasks.store');
     Route::patch('subtasks/{subtask}', [SubtaskController::class, 'update'])->name('subtasks.update');

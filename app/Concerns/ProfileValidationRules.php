@@ -18,6 +18,15 @@ trait ProfileValidationRules
         return [
             'name' => $this->nameRules(),
             'email' => $this->emailRules($userId),
+            // FlowRive's profile columns — see the users table migration
+            'job_title' => ['nullable', 'string', 'max:120'],
+            'phone' => ['nullable', 'string', 'max:40'],
+            'department' => ['nullable', 'string', 'max:60'],
+            'bio' => ['nullable', 'string', 'max:280'],
+            // 'sometimes' so a partial update (name + email only) still
+            // works; the column has a UTC default for accounts that never
+            // set one.
+            'timezone' => ['sometimes', 'required', 'string', 'timezone'],
         ];
     }
 

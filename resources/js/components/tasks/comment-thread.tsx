@@ -5,7 +5,11 @@ import { toast } from 'sonner';
 import { UserAvatar } from '@/components/user-avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { destroy as destroyComment, store as storeComment } from '@/routes/comments';
+import {
+    destroy as destroyComment,
+    store as storeComment,
+    react as reactToComment,
+} from '@/routes/comments';
 import type { Person, TaskComment } from '@/types';
 
 export function CommentThread({
@@ -139,17 +143,33 @@ function Comment({
                 </p>
 
                 <div className="mt-2 flex items-center gap-1.5">
-                    <span
+                    <button
+                        type="button"
+                        disabled={!canContribute}
+                        aria-pressed={comment.hasReacted}
+                        aria-label={
+                            comment.hasReacted
+                                ? 'Remove your reaction'
+                                : 'React with a thumbs up'
+                        }
+                        onClick={() =>
+                            router.post(
+                                reactToComment({ comment: comment.id }).url,
+                                {},
+                                { preserveScroll: true },
+                            )
+                        }
                         className={cn(
-                            'inline-flex h-5.5 items-center gap-1 rounded-full px-2 text-[11px] font-medium',
+                            'inline-flex h-5.5 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition',
                             comment.hasReacted
                                 ? 'bg-brand-soft text-brand-ink'
-                                : 'border-border text-muted-foreground border',
+                                : 'border-border text-muted-foreground hover:bg-secondary border',
+                            !canContribute && 'cursor-default',
                         )}
                     >
                         <ThumbsUp className="size-3" aria-hidden />
                         {comment.reactions}
-                    </span>
+                    </button>
                     {canContribute && (
                         <button
                             type="button"

@@ -7,11 +7,12 @@ import {
     FileText,
     Folder,
     Image as ImageIcon,
-    Paperclip,
+    Download,
     Pencil,
+    Trash2,
+    Upload,
     User as UserIcon,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { CommentThread } from '@/components/tasks/comment-thread';
 import { ProgressBar } from '@/components/progress-bar';
 import { PriorityBadge, StatusBadge } from '@/components/status-badge';
@@ -22,8 +23,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { activityPhrase, dueMeta } from '@/lib/flowrive';
 import { cn } from '@/lib/utils';
 import { board } from '@/routes/projects';
-import { index as tasksIndex, edit as editTask } from '@/routes/tasks';
+import {
+    index as tasksIndex,
+    edit as editTask,
+    watch as watchTask,
+    unwatch as unwatchTask,
+} from '@/routes/tasks';
 import { update as updateSubtask } from '@/routes/subtasks';
+import {
+    store as storeAttachment,
+    download as downloadAttachment,
+    destroy as destroyAttachment,
+} from '@/routes/attachments';
 import type { Auth, TaskShowProps } from '@/types';
 
 export default function TaskShow({
@@ -36,6 +47,21 @@ export default function TaskShow({
 }: TaskShowProps) {
     const auth = usePage().props.auth as Auth;
     const [tab, setTab] = useState<'comments' | 'history'>('comments');
+    const [uploading, setUploading] = useState(false);
+
+    /** Multipart upload, then Inertia re-renders with the new file listed. */
+    function upload(file: File) {
+        setUploading(true);
+        router.post(
+            storeAttachment({ task: task.id }).url,
+            { file },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onFinish: () => setUploading(false),
+            },
+        );
+    }
 
     const due = dueMeta(task.dueDate);
     const doneSubtasks = subtasks.filter((s) => s.isCompleted).length;
@@ -111,12 +137,18 @@ export default function TaskShow({
                         <Button
                             variant={task.isWatching ? 'default' : 'outline'}
                             size="sm"
+                            aria-pressed={task.isWatching}
                             onClick={() =>
-                                toast.info(
-                                    task.isWatching
-                                        ? 'Watching is not wired up yet.'
-                                        : 'Watching is not wired up yet.',
-                                )
+                                task.isWatching
+                                    ? router.delete(
+                                          unwatchTask({ task: task.id }).url,
+                                          { preserveScroll: true },
+                                      )
+                                    : router.post(
+                                          watchTask({ task: task.id }).url,
+                                          {},
+                                          { preserveScroll: true },
+                                      )
                             }
                         >
                             <Eye className="size-4" aria-hidden />
@@ -228,56 +260,154 @@ export default function TaskShow({
                         </Card>
 
                         {/* Attachments */}
-                        {attachments.length > 0 && (
-                            <Card className="gap-0 py-0">
-                                <div className="border-border flex items-center justify-between gap-4 border-b px-5 py-4">
-                                    <h2 className="text-foreground flex items-center gap-2 text-base font-semibold tracking-tight">
-                                        Attachments
-                                        <span className="bg-neutral-soft text-neutral-ink rounded-full px-2 text-[11px] font-medium tabular-nums">
-                                            {attachments.length}
+                        <Card className="gap-0 py-0">
+                            <div className="border-border flex items-center justify-between gap-4 border-b px-5 py-4">
+                                <h2 className="text-foreground flex items-center gap-2 text-base font-semibold tracking-tight">
+                                    Attachments
+                                    <span className="bg-neutral-soft text-neutral-ink rounded-full px-2 text-[11px] font-medium tabular-nums">
+                                        {attachments.length}
+                                    </span>
+                                </h2>
+                            </div>
+
+                            <div className="px-5 py-4">
+                                {canContribute && (
+                                    <label
+                                        className={cn(
+                                            'border-border-strong bg-secondary hover:border-brand-400 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center transition',
+                                            uploading && 'pointer-events-none opacity-60',
+                                        )}
+                                    >
+                                        <Upload
+                                            className="text-muted-foreground size-5"
+                                            aria-hidden
+                                        />
+                                        <span className="text-foreground mt-2 text-[13px] font-medium">
+                                            {uploading
+                                                ? 'Uploading…'
+                                                : 'Click to upload a file'}
                                         </span>
-                                    </h2>
-                                </div>
-                                <ul className="divide-border divide-y">
-                                    {attachments.map((file) => (
-                                        <li
-                                            key={file.id}
-                                            className="flex items-center gap-3 px-5 py-3"
-                                        >
-                                            <span
-                                                className={cn(
-                                                    'flex size-9 flex-none items-center justify-center rounded-lg',
-                                                    file.isImage
-                                                        ? 'bg-brand-soft text-brand-ink'
-                                                        : 'bg-secondary text-ink-2',
-                                                )}
+                                        <span className="text-muted-foreground mt-0.5 text-[11px]">
+                                            Up to 25 MB
+                                        </span>
+                                        <input
+                                            type="file"
+                                            className="sr-only"
+                                            disabled={uploading}
+                                            onChange={(event) => {
+                                                const file =
+                                                    event.target.files?.[0];
+                                                if (!file) return;
+                                                upload(file);
+                                                event.target.value = '';
+                                            }}
+                                        />
+                                    </label>
+                                )}
+
+                                {attachments.length > 0 && (
+                                    <ul className="divide-border mt-4 divide-y">
+                                        {attachments.map((file) => (
+                                            <li
+                                                key={file.id}
+                                                className="flex items-center gap-3 py-3 first:pt-0"
                                             >
-                                                {file.isImage ? (
-                                                    <ImageIcon
-                                                        className="size-4.5"
-                                                        aria-hidden
-                                                    />
-                                                ) : (
-                                                    <FileText
-                                                        className="size-4.5"
-                                                        aria-hidden
-                                                    />
+                                                <span
+                                                    className={cn(
+                                                        'flex size-9 flex-none items-center justify-center rounded-lg',
+                                                        file.isImage
+                                                            ? 'bg-brand-soft text-brand-ink'
+                                                            : 'bg-secondary text-ink-2',
+                                                    )}
+                                                >
+                                                    {file.isImage ? (
+                                                        <ImageIcon
+                                                            className="size-4.5"
+                                                            aria-hidden
+                                                        />
+                                                    ) : (
+                                                        <FileText
+                                                            className="size-4.5"
+                                                            aria-hidden
+                                                        />
+                                                    )}
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-foreground truncate text-[13px] font-medium">
+                                                        {file.name}
+                                                    </p>
+                                                    <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                                        {file.size} ·{' '}
+                                                        {file.uploadedBy} ·{' '}
+                                                        {file.uploadedAt}
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="size-8"
+                                                    aria-label={`Download ${file.name}`}
+                                                    asChild
+                                                >
+                                                    <a
+                                                        href={
+                                                            downloadAttachment({
+                                                                attachment:
+                                                                    file.id,
+                                                            }).url
+                                                        }
+                                                    >
+                                                        <Download
+                                                            className="size-4"
+                                                            aria-hidden
+                                                        />
+                                                    </a>
+                                                </Button>
+                                                {canContribute && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="size-8"
+                                                        aria-label={`Remove ${file.name}`}
+                                                        onClick={() => {
+                                                            if (
+                                                                !confirm(
+                                                                    `Remove ${file.name}?`,
+                                                                )
+                                                            )
+                                                                return;
+                                                            router.delete(
+                                                                destroyAttachment(
+                                                                    {
+                                                                        attachment:
+                                                                            file.id,
+                                                                    },
+                                                                ).url,
+                                                                {
+                                                                    preserveScroll:
+                                                                        true,
+                                                                },
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Trash2
+                                                            className="size-4"
+                                                            aria-hidden
+                                                        />
+                                                    </Button>
                                                 )}
-                                            </span>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-foreground truncate text-[13px] font-medium">
-                                                    {file.name}
-                                                </p>
-                                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                                    {file.size} · {file.uploadedBy} ·{' '}
-                                                    {file.uploadedAt}
-                                                </p>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </Card>
-                        )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                {attachments.length === 0 && !canContribute && (
+                                    <p className="text-muted-foreground py-6 text-center text-[13px]">
+                                        No files on this task.
+                                    </p>
+                                )}
+                            </div>
+                        </Card>
 
                         {/* Comments + history */}
                         <Card className="gap-0 py-0">

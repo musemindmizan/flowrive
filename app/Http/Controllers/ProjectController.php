@@ -10,6 +10,7 @@ use App\Models\Activity;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Support\Flash;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -190,8 +191,10 @@ class ProjectController extends Controller
             return $project;
         });
 
-        return to_route('projects.board', $project)
-            ->with('success', "{$project->name} is ready for your team.");
+        return Flash::success(
+            to_route('projects.board', $project),
+            "{$project->name} is ready for your team.",
+        );
     }
 
     public function edit(Request $request, Project $project): Response
@@ -239,8 +242,10 @@ class ProjectController extends Controller
             $project->members()->sync($sync);
         });
 
-        return to_route('projects.board', $project)
-            ->with('success', 'Project updated.');
+        return Flash::success(
+            to_route('projects.board', $project),
+            'Project updated.',
+        );
     }
 
     public function destroy(Request $request, Project $project): RedirectResponse
@@ -250,8 +255,10 @@ class ProjectController extends Controller
         $name = $project->name;
         $project->delete();
 
-        return to_route('projects.index')
-            ->with('success', "{$name} was deleted.");
+        return Flash::success(
+            to_route('projects.index'),
+            "{$name} was deleted.",
+        );
     }
 
     /**

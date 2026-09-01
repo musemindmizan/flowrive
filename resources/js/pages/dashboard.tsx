@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { Plus, SquareCheck } from 'lucide-react';
+import { Folder, Plus, SquareCheck, Users } from 'lucide-react';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
 import { MyTasks } from '@/components/dashboard/my-tasks';
 import { ProjectOverview } from '@/components/dashboard/project-overview';
@@ -12,6 +12,7 @@ import { Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { create as createProject } from '@/routes/projects';
 import { create as createTask } from '@/routes/tasks';
+import { index as teamIndex } from '@/routes/team';
 import type { DashboardProps } from '@/types';
 
 export default function Dashboard({
@@ -84,22 +85,54 @@ export default function Dashboard({
                     </div>
                 </header>
 
-                <div className="mt-6">
-                    <StatCards stats={stats} />
-                </div>
+                {projects.length === 0 && myTasks.length === 0 ? (
+                    <Card className="mt-6 px-6 py-16 text-center">
+                        <span className="bg-brand-soft text-brand-ink mx-auto flex size-14 items-center justify-center rounded-2xl">
+                            <Folder className="size-6" aria-hidden />
+                        </span>
+                        <h2 className="text-foreground mt-4 text-lg font-semibold">
+                            Nothing to show yet
+                        </h2>
+                        <p className="text-muted-foreground mx-auto mt-1.5 max-w-sm text-[13px] leading-6">
+                            Projects hold your tasks, files and conversation.
+                            Create the first one and invite the people who'll
+                            work on it.
+                        </p>
+                        <div className="mt-5 flex flex-wrap justify-center gap-2">
+                            <Button asChild>
+                                <Link href={createProject()}>
+                                    <Plus className="size-4" aria-hidden />
+                                    Create your first project
+                                </Link>
+                            </Button>
+                            <Button variant="outline" asChild>
+                                <Link href={teamIndex()}>
+                                    <Users className="size-4" aria-hidden />
+                                    Invite your team
+                                </Link>
+                            </Button>
+                        </div>
+                    </Card>
+                ) : (
+                    <>
+                        <div className="mt-6">
+                            <StatCards stats={stats} />
+                        </div>
 
-                <div className="mt-5 grid gap-5 xl:grid-cols-3">
-                    <div className="space-y-5 xl:col-span-2">
-                        <ProjectOverview projects={projects} />
-                        <MyTasks tasks={myTasks} />
-                    </div>
+                        <div className="mt-5 grid gap-5 xl:grid-cols-3">
+                            <div className="space-y-5 xl:col-span-2">
+                                <ProjectOverview projects={projects} />
+                                <MyTasks tasks={myTasks} />
+                            </div>
 
-                    <div className="space-y-5">
-                        <UpcomingDeadlines deadlines={deadlines} />
-                        <ActivityFeed activity={activity} />
-                        <TeamWorkload workload={workload} />
-                    </div>
-                </div>
+                            <div className="space-y-5">
+                                <UpcomingDeadlines deadlines={deadlines} />
+                                <ActivityFeed activity={activity} />
+                                <TeamWorkload workload={workload} />
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         </>
     );

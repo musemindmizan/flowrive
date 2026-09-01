@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Enums\WorkspaceRole;
+use App\Mail\WorkspaceInvitation;
 use App\Models\Invitation;
+use App\Support\Flash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 /**
@@ -42,7 +45,7 @@ class InvitationController extends Controller
             'email.unique' => 'That address already has a pending invitation.',
         ]);
 
-        Invitation::create([
+        $invitation = Invitation::create([
             'workspace_id' => $workspace->id,
             'email' => $data['email'],
             'role' => $data['role'],
@@ -52,7 +55,15 @@ class InvitationController extends Controller
             'expires_at' => now()->addDays(self::VALID_DAYS),
         ]);
 
-        return back()->with('success', "Invitation sent to {$data['email']}.");
+        // Queued: a slow SMTP server must not hold up the response
+        Mail::to($invitation->email)->queue(
+            new WorkspaceInvitation($invitation->load('workspace', 'inviter')),
+        );
+
+        return Flash::success(
+            back(),
+            "Invitation sent to {$data['email']}.",
+        );
     }
 
     public function destroy(Request $request, Invitation $invitation): RedirectResponse
@@ -67,6 +78,9 @@ class InvitationController extends Controller
 
         $invitation->forceFill(['revoked_at' => now()])->save();
 
-        return back()->with('success', 'Invitation revoked.');
+        return Flash::success(
+            back(),
+            'Invitation revoked.',
+        );
     }
 }

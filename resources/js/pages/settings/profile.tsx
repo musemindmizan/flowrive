@@ -2,6 +2,7 @@ import { Form, Head, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
+import { Select, Textarea } from '@/components/form-field';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,7 @@ export default function Profile(
                 <Heading
                     variant="small"
                     title="Profile"
-                    description="Update your name and email address"
+                    description="How you appear to everyone in the workspace"
                 />
 
                 <Form
@@ -85,6 +86,116 @@ export default function Profile(
                                     className="mt-2"
                                     message={errors.email}
                                 />
+                            </div>
+
+
+                            {/* FlowRive profile columns — these show on your
+                                member page and beside your avatar. */}
+                            <div className="grid gap-5 sm:grid-cols-2">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="job_title">Job title</Label>
+                                    <Input
+                                        id="job_title"
+                                        name="job_title"
+                                        className="mt-1 block w-full"
+                                        defaultValue={
+                                            (auth.user.job_title as string) ?? ''
+                                        }
+                                        placeholder="e.g. Product Manager"
+                                    />
+                                    <InputError
+                                        className="mt-2"
+                                        message={errors.job_title}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="department">
+                                        Department
+                                    </Label>
+                                    <Input
+                                        id="department"
+                                        name="department"
+                                        className="mt-1 block w-full"
+                                        defaultValue={
+                                            (auth.user.department as string) ??
+                                            ''
+                                        }
+                                        placeholder="e.g. Product"
+                                    />
+                                    <InputError
+                                        className="mt-2"
+                                        message={errors.department}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="phone">Phone</Label>
+                                    <Input
+                                        id="phone"
+                                        name="phone"
+                                        type="tel"
+                                        className="mt-1 block w-full"
+                                        defaultValue={
+                                            (auth.user.phone as string) ?? ''
+                                        }
+                                        placeholder="Optional"
+                                    />
+                                    <InputError
+                                        className="mt-2"
+                                        message={errors.phone}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="timezone">Timezone</Label>
+                                    <Select
+                                        id="timezone"
+                                        name="timezone"
+                                        className="mt-1"
+                                        defaultValue={
+                                            (auth.user.timezone as string) ??
+                                            'UTC'
+                                        }
+                                    >
+                                        {[
+                                            'UTC',
+                                            'America/Los_Angeles',
+                                            'America/Chicago',
+                                            'America/New_York',
+                                            'Europe/London',
+                                            'Europe/Berlin',
+                                            'Asia/Dhaka',
+                                            'Asia/Kolkata',
+                                            'Asia/Singapore',
+                                            'Australia/Sydney',
+                                        ].map((zone) => (
+                                            <option key={zone} value={zone}>
+                                                {zone}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                    <InputError
+                                        className="mt-2"
+                                        message={errors.timezone}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="bio">Bio</Label>
+                                <Textarea
+                                    id="bio"
+                                    name="bio"
+                                    rows={3}
+                                    maxLength={280}
+                                    className="mt-1"
+                                    defaultValue={
+                                        (auth.user.bio as string) ?? ''
+                                    }
+                                    placeholder="A line or two about what you work on."
+                                />
+                                <InputError className="mt-2" message={errors.bio} />
                             </div>
 
                             {mustVerifyEmail &&

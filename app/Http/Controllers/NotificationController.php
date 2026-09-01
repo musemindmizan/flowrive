@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\NotificationCategory;
 use App\Models\User;
+use App\Support\Flash;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -90,7 +91,10 @@ class NotificationController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        return back()->with('success', 'All notifications marked as read.');
+        return Flash::success(
+            back(),
+            'All notifications marked as read.',
+        );
     }
 
     public function destroy(Request $request, string $notification): RedirectResponse
@@ -104,7 +108,10 @@ class NotificationController extends Controller
     {
         $this->base($request->user())->delete();
 
-        return back()->with('success', 'All notifications cleared.');
+        return Flash::success(
+            back(),
+            'All notifications cleared.',
+        );
     }
 
     /**

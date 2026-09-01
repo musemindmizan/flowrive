@@ -40,6 +40,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $locale
  * @property int $week_starts_on
  * @property string $digest_frequency
+ * @property Carbon|null $quiet_hours_start
+ * @property Carbon|null $quiet_hours_end
  * @property Carbon|null $last_seen_at
  * @property Carbon|null $deleted_at
  */
@@ -73,6 +75,8 @@ class User extends Authenticatable implements PasskeyUser
             'two_factor_confirmed_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'week_starts_on' => 'integer',
+            'quiet_hours_start' => 'datetime',
+            'quiet_hours_end' => 'datetime',
         ];
     }
 

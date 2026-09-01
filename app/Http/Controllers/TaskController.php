@@ -14,6 +14,7 @@ use App\Models\Project;
 use App\Models\Subtask;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Flash;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -437,8 +438,10 @@ class TaskController extends Controller
             return $task;
         });
 
-        return to_route('tasks.show', $task)
-            ->with('success', $task->key().' created.');
+        return Flash::success(
+            to_route('tasks.show', $task),
+            $task->key().' created.',
+        );
     }
 
     public function edit(Request $request, Task $task): Response
@@ -489,7 +492,10 @@ class TaskController extends Controller
             $task->project->recountTasks();
         });
 
-        return to_route('tasks.show', $task)->with('success', 'Task updated.');
+        return Flash::success(
+            to_route('tasks.show', $task),
+            'Task updated.',
+        );
     }
 
     public function destroy(Request $request, Task $task): RedirectResponse
@@ -504,7 +510,10 @@ class TaskController extends Controller
             $project->recountTasks();
         });
 
-        return to_route('tasks.index')->with('success', "{$key} was deleted.");
+        return Flash::success(
+            to_route('tasks.index'),
+            "{$key} was deleted.",
+        );
     }
 
     /** Append to the end of a column, leaving a gap for later inserts. */
