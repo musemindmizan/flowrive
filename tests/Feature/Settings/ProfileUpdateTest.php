@@ -76,7 +76,13 @@ class ProfileUpdateTest extends TestCase
             ->assertRedirect(route('home'));
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+
+        // Users are soft-deleted: their name still has to render on the tasks
+        // they reported and the comments they wrote, and reporter_id is
+        // RESTRICT precisely so that history cannot be erased underneath it.
+        // (fresh() deliberately bypasses global scopes, so query for it.)
+        $this->assertSoftDeleted($user);
+        $this->assertNull(User::find($user->id));
     }
 
     public function test_correct_password_must_be_provided_to_delete_account()
