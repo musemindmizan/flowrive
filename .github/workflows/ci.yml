@@ -10,7 +10,6 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
-    # GitHub Runner-এ MySQL এবং Redis সার্ভিস চালু করা
     services:
       mysql:
         image: mysql:8.0
@@ -45,11 +44,21 @@ jobs:
         php-version: '8.4'
         extensions: mbstring, pdo, pdo_mysql, redis
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
-    - name: Install Dependencies
+    - name: Install PHP Dependencies
       run: composer install --prefer-dist --no-progress
+
+    - name: Install Node Dependencies & Build Assets
+      run: |
+        npm install
+        npm run build
 
     - name: Generate App Key
       run: php artisan key:generate
