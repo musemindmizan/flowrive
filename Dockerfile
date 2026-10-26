@@ -15,6 +15,9 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
+# Install and Enable Redis Extension
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Enable Apache Mod Rewrite
 RUN a2enmod rewrite
 

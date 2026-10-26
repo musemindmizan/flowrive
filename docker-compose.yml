@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # 1. Laravel Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flowrive_app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: flowrive_db
+      DB_USERNAME: flowrive_user
+      DB_PASSWORD: secret_password
+      REDIS_HOST: redis
+    depends_on:
+      - db
+      - redis
+
+  # 2. MySQL Database Service
+  db:
+    image: mysql:8.0
+    container_name: flowrive_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: flowrive_db
+      MYSQL_USER: flowrive_user
+      MYSQL_PASSWORD: secret_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  # 3. Redis Cache/Queue Service
+  redis:
+    image: redis:alpine
+    container_name: flowrive_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+# Persistent Volume for Database
+volumes:
+  dbdata:
